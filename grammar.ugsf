@@ -1,0 +1,230 @@
+
+program => empty
+        | program_body
+
+program_body => declaration
+             |  declaration program_body
+
+declaration => named_func_decl
+            |  var_decl
+            |  struct_decl
+            |  enum_decl
+
+func_valid_declaration => named_func_decl
+            | var_decl
+            | capture_block
+            | enum_decl
+
+struct_valid_declaration => named_fun_decl
+                         |  var_decl
+
+opt_defer_stmt => DEFER statement
+               |  statement
+
+statement   => assgn_stmt
+            |  return_stmt
+            |  expr SEMICO
+            |  if_stmt
+            |  for_stmt
+            |  while_stmt
+
+struct_decl => identifier DUBCOLON struct_keyword LCURL opt_struct_body RCURL
+
+struct_keyword => STRUCT
+               |  STRUCT SOA
+
+enum_decl => identifier DUBCOLON ENUM type LCURL opt_enum_body RCURL
+
+opt_enum_body => empty
+              | enum_body
+
+enum_body => enum_body_element
+          |  enum_body_element COMMA
+          |  enum_body_element COMMA enum_body
+
+enum_body_element => identifier
+                  |  identifier EQ literal
+
+opt_struct_body => struct_body | empty_string
+
+struct_body => func_valid_declaration
+            |  func_valid_declaration struct_body
+
+type       => identifier_list
+           |  identifier
+           |  LBRACK RBRACK type
+           |  STAR identifier
+           |  BANGSTAR identifier
+
+identifier_list => LPAREN identifier COMMA identifier identifier_list_end
+
+identifier_list_end => RPAREN
+                    |  COMMA identifier identifier_list_end
+
+named_func_decl  => identifier DUBCOLON anon_func_decl
+
+anon_func_decl => LPAREN opt_param_list RPAREN opt_func_return_type capture_block
+
+capture_block => opt_capture LCURL opt_func_body RCURL
+
+opt_func_return_type => empty
+                     | RARROW type
+
+opt_param_list => param_list | empty
+
+opt_capture    => LBRACK capture_list RBRACK | empty
+
+opt_capture_list => capture_list | empty
+
+param_list_element => identifier COLON type
+                   |  identifier COLON DOLLAR type
+                   |  USING identifier COLON type
+                   |  USING identifier COLON DOLLAR type
+
+param_list => param_list_element
+           |  param_list_element COMMA param_list
+
+capture_list => identifier
+             |  identifier COMMA capture_list
+
+opt_func_body => func_body | empty_string
+
+func_body => func_valid_declaration
+          |  opt_defer_stmt
+          |  func_valid_declaration func_body
+          |  opt_defer_stmt func_body
+
+var_decl   => identifier COLON type SEMICO
+           => identifier COLON type EQ expr_or_opt_out SEMICO
+           => array_def
+
+expr_or_opt_out => expr
+                |  TRIPDASH
+
+array_def  => identifier COLON LBRACK DUBDOT RBRACK SEMICO
+           |  identifier COLON LBRACK INTEGER RBRACK SEMICO
+
+assgn_stmt => target COLONEQ expr SEMICO
+
+for_stmt => FOR identifier COLON expr LCURL opt_func_body RCURL
+         |  FOR expr LCURL opt_func_body RCURL
+
+while_stmt => WHILE expr LCURL opt_func_body RCURL
+
+if_stmt => IF expr LCURL opt_func_body RCURL if_stmt_rest 
+
+if_stmt_rest => ELSE IF expr LCURL opt_func_body RCURL if_stmt rest
+             |  ELSE LCURL opt_func_body RCURL
+             |  empty_string
+
+switch_stmt => IF expr switch_stmt_comparison LCURL opt_switch_stmt_body RCURL
+
+switch_stmt_comparison => DUBEQ | BANGEQ | GEQ | LEQ | GT | LT
+
+opt_switch_stmt_body => switch_stmt_body | empty_string
+
+switch_stmt_body => CASE expr SEMICO opt_func_body switch_stmt_rest
+
+switch_stmt_rest => switch_stmt_body switch_stmt_rest
+                 | CASE SEMICO opt_func_body
+
+target => identifier
+       |  member_expr
+       |  index_expr
+       |  DUBLANGLE identifier
+
+return_stmt => RETURN expr SEMICO
+
+expr => literal
+     |  expr COMMA arg_list
+     |  NEW identifier
+     |  DELETE identifier
+     |  range
+     |  identifier
+     |  LPAREN expr RPAREN
+     |  func_call
+     |  INLINE func_call
+     |  NO_INLINE func_call
+     |  HASHRUN func_call
+     |  member_expr
+     |  index_expr
+     |  expr bin_op expr
+     |  unary_op expr
+     |  CAST LPAREN type RPAREN expr 
+
+func_call => callable LPAREN opt_arg_list RPAREN
+
+callable => identifier
+         |  member_expr
+         |  anon_func_decl
+         |  named_func_decl
+
+member_expr => expr DOT identifier
+
+index_expr => expr LBRACK expr RBRACK
+
+literal   => STRING
+          |  INTEGER
+          |  FLOAT
+
+range     => expr DUBDOT expr
+
+opt_arg_list => arg_list | empty_string
+
+arg_list => expr
+         |  expr COMMA arg_list
+
+unary_op => BANGSTAR 
+         |  STAR
+         |  AMPO
+         |  MINUS
+         |  DELETE
+
+
+DUBEQ => ==
+BANGEQ => !=
+GEQ => >=
+GT => >
+LEQ => <=
+LT => <
+PLUS => +
+MINUS => -
+DIV => /
+MOD => %
+CASE => case
+COLON => :
+EQ => =
+AMPO => &
+COLONEQ => :=
+STRUCT => struct
+STRING => "([^"]|(\"))"
+INTEGER => [0-9]+
+FLOAT   => ([0-9]*\.[0-9]+|[0-9]+\.[0-9]*)
+LBRACK => [
+RBRACK => ]
+LPAREN => (
+RPAREN => )
+LCURL  => {
+RCURL  => }
+RETURN => return
+SEMICO => ;
+DUBDOT => ..
+RARROW => ->
+DEFER => defer
+DUBCOLON => ::
+SOA => SOA
+ENUM => enum
+COMMA => ,
+BANGSTAR => !*
+STAR => *
+TRIPDASH => ---
+FOR => for
+WHILE => while
+IF => if
+ELSE => else
+DOT => .
+DUBLANGLE => <<
+HASHRUN => #run
+INLINE => inline
+NO_INLINE => no_inline
+DOLLAR => $
